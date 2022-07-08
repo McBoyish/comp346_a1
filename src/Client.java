@@ -1,4 +1,4 @@
-// package comp346pa1s2020;
+import java.io.File;
 
 import java.util.Scanner;
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import java.util.InputMismatchException;
  * @author Kerly Titus
  */
 
-public class Client { 
+public class Client extends Thread { 
     
     private static int numberOfTransactions;   		/* Number of transactions to process */
     private static int maxNbTransactions;      		/* Maximum number of transactions */
@@ -159,13 +159,16 @@ public class Client {
          while (i < getNumberOfTransactions())
          {  
             // while( objNetwork.getInBufferStatus().equals("full") );     /* Alternatively, busy-wait until the network input buffer is available */
-                                             	
+           
+            while (objNetwork.getInBufferStatus().equals("full")) {
+            	Thread.yield();     
+            }    
             transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
            
             System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
             
             objNetwork.send(transaction[i]);                            /* Transmit current transaction */
-            i++;
+            i++;  
          }
          
     }
@@ -183,7 +186,10 @@ public class Client {
          while (i < getNumberOfTransactions())
          {     
         	 // while( objNetwork.getOutBufferStatus().equals("empty"));  	/* Alternatively, busy-wait until the network output buffer is available */
-                                                                        	
+            while( objNetwork.getOutBufferStatus().equals("empty")) {  		
+        		Thread.yield();
+    		}
+        		
             objNetwork.receive(transact);                               	/* Receive updated transaction from the network buffer */
             
             System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
@@ -210,10 +216,22 @@ public class Client {
      * @param
      */
     public void run()
-    {   
+    {       
     	Transactions transact = new Transactions();
-    	long sendClientStartTime, sendClientEndTime, receiveClientStartTime, receiveClientEndTime;
-    
-	/* Implement the code for the run method */
+    	long serverStartTime, serverEndTime;
+    	serverStartTime = System.currentTimeMillis();
+    	serverEndTime = System.currentTimeMillis();
+
+    	if (clientOperation.equals("sending"))
+        { 
+        	sendTransactions();
+        } 
+    	else if (clientOperation.equals("receiving"))
+        { 
+    		receiveTransactions(transact);
+    		String cip = objNetwork.getClientIP();
+            objNetwork.disconnect(cip);
+        }
+    	System.out.println("\n Terminating client " + clientOperation + " thread - Running time " + (serverEndTime - serverStartTime) + " milliseconds");
     }
 }

@@ -1,6 +1,6 @@
-// package comp346pa1s2020;
+import java.io.File;
 
-/*
+/* 
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -10,7 +10,7 @@
  *
  * @author Kerly Titus
  */
-public class Network {
+public class Network extends Thread {
     
     private static int maxNbPackets;                           /* Maximum number of simultaneous transactions handled by the network buffer */
     private static int inputIndexClient, inputIndexServer, outputIndexServer, outputIndexClient;                   /* Network buffer indices for accessing the input buffer (inputIndexClient, outputIndexServer) and output buffer (inputIndexServer, outputIndexClient) */
@@ -23,7 +23,7 @@ public class Network {
     private static Transactions outGoingPacket[];              /* Outgoing network buffer */
     private static String inBufferStatus, outBufferStatus;     /* Current status of the network buffers - normal, full, empty */
     private static String networkStatus;                       /* Network status - active, inactive */
-      
+
     /** 
      * Constructor of the Network class
      * 
@@ -462,8 +462,8 @@ public class Network {
             inPacket.setTransactionError(inComingPacket[outputIndexServer].getTransactionError());
             inPacket.setTransactionStatus("received");
            
-            System.out.println("\n DEBUG : Network.transferIn() - index outputIndexServer " + outputIndexServer);
-            System.out.println("\n DEBUG : Network.transferIn() - account number " + inPacket.getAccountNumber());
+           System.out.println("\n DEBUG : Network.transferIn() - index outputIndexServer " + outputIndexServer);
+           System.out.println("\n DEBUG : Network.transferIn() - account number " + inPacket.getAccountNumber());
             
            setoutputIndexServer(((getoutputIndexServer() + 1) % getMaxNbPackets()));	/* Increment the input buffer index for the server */
            /* Check if input buffer is empty */
@@ -557,7 +557,12 @@ public class Network {
     	
     	while (true)
     	{
-		/* Implement the code for the run method */
-    	}    
+    		//The network disconnects if both the server and the client are disconnected.
+    		if (serverConnectionStatus.equals("disconnected") && clientConnectionStatus.equals("disconnected")) 
+            {
+    			return;
+    		}
+        Thread.yield();
+    	}  
     }
 }

@@ -1,4 +1,4 @@
-// package comp346pa1s2020;
+import java.io.File;
 
 import java.util.Scanner;
 import java.io.FileInputStream;
@@ -10,14 +10,14 @@ import java.util.InputMismatchException;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-/*package comp546pa1w2020;*/
+ /*package comp546pa1w2020;*/
 
 /** Server class
- *
+ * 
  * @author Kerly Titus
  */
 
-public class Server {
+public class Server extends Thread{
   
 	int numberOfTransactions;         /* Number of transactions handled by the server */
 	int numberOfAccounts;             /* Number of accounts stored in the server */
@@ -193,8 +193,11 @@ public class Server {
               
          /* Process the accounts until the client disconnects */
          while ((!objNetwork.getClientConnectionStatus().equals("disconnected")))
-         { 
+         {         	 
         	 /* while( (objNetwork.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
+             if (objNetwork.getInBufferStatus().equals("empty")) { 
+            	 Thread.yield();
+        	 } 
         	 
         	 if (!objNetwork.getInBufferStatus().equals("empty"))
         	 {
@@ -232,10 +235,13 @@ public class Server {
                             
                             System.out.println("\n DEBUG : Server.processTransactions() - Obtaining balance from account" + trans.getAccountNumber());
         				 } 
-        		        		 
+        		        		                                                            
         		 // while( (objNetwork.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
-                                                           
+
         		 System.out.println("\n DEBUG : Server.processTransactions() - transferring out account " + trans.getAccountNumber());
+                 while (objNetwork.getOutBufferStatus().equals("full")) {
+                 	Thread.yield();     
+                 } 
         		 
         		 objNetwork.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
         		 setNumberOfTransactions( (getNumberOfTransactions() +  1) ); 	/* Count the number of transactions processed */
@@ -314,10 +320,14 @@ public class Server {
 
     	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetwork.getServerConnectionStatus());
     	
-    	/* Implement the code for the run method */
-        
-        System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
-           
+    	serverStartTime = System.currentTimeMillis();
+    	serverEndTime = System.currentTimeMillis();
+    	processTransactions(trans);
+    	String sip = objNetwork.getServerIP();
+        objNetwork.disconnect(sip);
+    	        
+        System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");  
+
     }
 }
 
